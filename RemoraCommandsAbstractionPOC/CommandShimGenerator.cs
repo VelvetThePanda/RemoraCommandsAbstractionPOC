@@ -42,10 +42,7 @@ public class CommandShimGenerator : ISourceGenerator
             builder.AppendLine("using Remora.Commands;");
             builder.AppendLine("using System.Collections.Generic;");
 
-            var namespaceDeclaration = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().First();
-
-            builder.AppendLine($"namespace {namespaceDeclaration.Name}");
-            builder.AppendLine('{');
+            var emittedNamespace = false;
 
             using var classWriter = builder.CreateChildWriter();
 
@@ -60,6 +57,13 @@ public class CommandShimGenerator : ISourceGenerator
                         break; // Class doesn't inherit anything.
 
                     var symbol = semanticModel.GetDeclaredSymbol(cds);
+                    
+                    if (!emittedNamespace && symbol.ContainingNamespace.IsGlobalNamespace)
+                    {
+                        classWriter.AppendLine($"namespace {symbol.ContainingNamespace.Name}");
+                        classWriter.AppendLine("{");
+                        emittedNamespace = true;
+                    }
 
                     // We're in a command, but this class in particular isn't a command group.
                     if (!symbol.BaseType.Equals(symbol))

@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoraCommandsAbstractionPOC", "RemoraCommandsAbstractionPOC\RemoraCommandsAbstractionPOC.csproj", "{D908F2F3-2AB6-4AA8-934C-E0BEE8F5C47C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestCommandsAssembly", "TestCommandsAssembly\TestCommandsAssembly.csproj", "{FF9357AA-1C19-440D-A771-93F2FC833CE5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{D908F2F3-2AB6-4AA8-934C-E0BEE8F5C47C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D908F2F3-2AB6-4AA8-934C-E0BEE8F5C47C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D908F2F3-2AB6-4AA8-934C-E0BEE8F5C47C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF9357AA-1C19-440D-A771-93F2FC833CE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF9357AA-1C19-440D-A771-93F2FC833CE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF9357AA-1C19-440D-A771-93F2FC833CE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF9357AA-1C19-440D-A771-93F2FC833CE5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

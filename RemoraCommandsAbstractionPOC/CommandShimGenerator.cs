@@ -173,7 +173,7 @@ public class CommandShimGenerator : ISourceGenerator
             bodyWriter.Append(");");
             bodyWriter.AppendLine("");
 
-            bodyWriter.AppendLine("return Result.Success();");
+            bodyWriter.AppendLine("return Result.FromSuccess();");
         }
 
         methodWriter.AppendLine('}');

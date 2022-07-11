@@ -121,6 +121,7 @@ public class CommandShimGenerator : ISourceGenerator
         if (!symbol.Parameters.Any() || symbol.Parameters.All(p => !p.GetAttributes().Any()))
         {
             methodWriter.Append("()");
+            methodWriter.AppendLine("");
         }
         else
         {
@@ -129,11 +130,9 @@ public class CommandShimGenerator : ISourceGenerator
 
             using (var parameterWriter = methodWriter.CreateChildWriter())
             {
-                
                 for (var i = 0; i < symbol.Parameters.Length; i++)
                 {
                     var parameter = symbol.Parameters[i];
-                    RipAttributes(parameterWriter, parameter.GetAttributes());
 
                     if (parameter.IsParams)
                     {
@@ -161,27 +160,32 @@ public class CommandShimGenerator : ISourceGenerator
                     parameterWriter.AppendLine(' ');
                 }
             }
-            
+
             methodWriter.AppendLine(')');
-            methodWriter.AppendLine('{');
 
-            using (var bodyWriter = methodWriter.CreateChildWriter())
-            {
-                bodyWriter.Append($"await {symbol.Name}({string.Join(", ", symbol.Parameters.Select(p => p.Name))}");
-                bodyWriter.AppendLine(");");
-
-                bodyWriter.AppendLine("return Result.Success();");
-            }
-
-            methodWriter.AppendLine('}');
         }
+        
+        methodWriter.AppendLine('{');
+
+        using (var bodyWriter = methodWriter.CreateChildWriter())
+        {
+            bodyWriter.Append($"await {symbol.Name}({string.Join(", ", symbol.Parameters.Select(p => p.Name))}", true);
+            bodyWriter.Append(");");
+            bodyWriter.AppendLine("");
+
+            bodyWriter.AppendLine("return Result.Success();");
+        }
+
+        methodWriter.AppendLine('}');
+
+        methodWriter.Flush();
     }
 
     private static void RipAttributes(CodeWriter writer, ImmutableArray<AttributeData> attributes)
     {
         foreach (var attribute in attributes)
         {
-            writer.Append('[');
+            writer.Append("[", true);
 
             var attributeName = attribute.AttributeClass.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
@@ -227,11 +231,13 @@ public class CommandShimGenerator : ISourceGenerator
                 }
 
                 writer.Append('(');
-                writer.Append($"{attributeName}({string.Join(", ", stringifiedArguments)})");
+                writer.Append($"({string.Join(", ", stringifiedArguments)})");
                 writer.Append(')');
             }
 
             writer.AppendLine(']');
         }
+        
+        writer.Flush();
     }
 }

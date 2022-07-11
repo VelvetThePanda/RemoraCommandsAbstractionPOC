@@ -39,7 +39,7 @@ public class CodeWriter : IDisposable
 
     public CodeWriter AppendLine(char text)
     {
-        _stringBuilder.AppendLine(text.ToString());
+        _stringBuilder.AppendLine(GetIndent() + text.ToString());
 
         return this;
     }

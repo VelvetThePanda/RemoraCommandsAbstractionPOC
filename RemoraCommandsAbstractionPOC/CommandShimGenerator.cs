@@ -51,10 +51,12 @@ public class CommandShimGenerator : ISourceGenerator
             {
                 if (node is ClassDeclarationSyntax cds)
                 {
-                    if (!cds.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
+                    var semanticClass = semanticModel.GetDeclaredSymbol(cds);
+                    
+                    if (semanticClass.DeclaredAccessibility is not Accessibility.Public)
                         continue;
 
-                    if (!cds.BaseList?.Types.Any() ?? true)
+                    if (!semanticClass.BaseType?.Equals(commandGroup) ?? true)
                         break; // Class doesn't inherit anything.
 
                     var symbol = semanticModel.GetDeclaredSymbol(cds);
@@ -72,6 +74,8 @@ public class CommandShimGenerator : ISourceGenerator
 
                     classWriter.AppendLine($"class {cds.Identifier}");
                     classWriter.AppendLine("{");
+
+                    classWriter.Flush();
                 }
 
                 if (node is MethodDeclarationSyntax mds)
@@ -97,10 +101,7 @@ public class CommandShimGenerator : ISourceGenerator
 
                     RipAttributes(methodWriter, attributes);
                     ShimMethod(methodWriter, symbol);
-
-                    methodWriter.Flush();
                 }
-                
                 
                 if (emittedNamespace)
                 {
@@ -127,50 +128,51 @@ public class CommandShimGenerator : ISourceGenerator
         {
             methodWriter.AppendLine('(');
 
-            using var parameterWriter = methodWriter.CreateChildWriter();
-
-            for (var i = 0; i < symbol.Parameters.Length; i++)
+            using (var parameterWriter = methodWriter.CreateChildWriter())
             {
-                var parameter = symbol.Parameters[i];
-                RipAttributes(parameterWriter, parameter.GetAttributes());
-
-                if (parameter.IsParams)
+                
+                for (var i = 0; i < symbol.Parameters.Length; i++)
                 {
-                    parameterWriter.Append("params ");
+                    var parameter = symbol.Parameters[i];
+                    RipAttributes(parameterWriter, parameter.GetAttributes());
+
+                    if (parameter.IsParams)
+                    {
+                        parameterWriter.Append("params ");
+                    }
+
+                    parameterWriter.Append(parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+
+                    if (parameter.Type.TypeKind is TypeKind.Array)
+                    {
+                        parameterWriter.Append("[]");
+                    }
+
+                    parameterWriter.Append(parameter.Name);
+
+                    if (parameter.IsOptional)
+                    {
+                        parameterWriter.Append(" = ");
+                        parameterWriter.Append(parameter.ExplicitDefaultValue.ToString());
+                    }
+
+                    if (symbol.Parameters.Length > 1 && i < symbol.Parameters.Length - 1)
+                        parameterWriter.Append(',');
+
+                    parameterWriter.AppendLine(' ');
                 }
-
-                parameterWriter.Append(parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
-
-                if (parameter.Type.TypeKind is TypeKind.Array)
-                {
-                    parameterWriter.Append("[]");
-                }
-
-                parameterWriter.Append(parameter.Name);
-
-                if (parameter.IsOptional)
-                {
-                    parameterWriter.Append(" = ");
-                    parameterWriter.Append(parameter.ExplicitDefaultValue.ToString());
-                }
-
-                if (symbol.Parameters.Length > 1 && i < symbol.Parameters.Length - 1)
-                    parameterWriter.Append(',');
-
-                parameterWriter.AppendLine(' ');
             }
-
+            
             methodWriter.AppendLine(')');
-
             methodWriter.AppendLine('{');
 
-            using var bodyWriter = methodWriter.CreateChildWriter();
+            using (var bodyWriter = methodWriter.CreateChildWriter())
+            {
+                bodyWriter.Append($"await {symbol.Name}({string.Join(", ", symbol.Parameters.Select(p => p.Name))}");
+                bodyWriter.AppendLine(");");
 
-            bodyWriter.AppendLine($"await {symbol.Name}({string.Join(", ", symbol.Parameters.Select(p => p.Name))};");
-            bodyWriter.AppendLine(");");
-
-            bodyWriter.AppendLine("return Result.Success();");
-            bodyWriter.Flush();
+                bodyWriter.AppendLine("return Result.Success();");
+            }
 
             methodWriter.AppendLine('}');
         }

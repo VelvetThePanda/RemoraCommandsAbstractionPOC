@@ -56,20 +56,18 @@ public class CommandShimGenerator : ISourceGenerator
                     if (semanticClass.DeclaredAccessibility is not Accessibility.Public)
                         continue;
 
-                    if (!semanticClass.BaseType?.Equals(commandGroup) ?? true)
+                    if (semanticClass.BaseType is null)
                         break; // Class doesn't inherit anything.
-
-                    var symbol = semanticModel.GetDeclaredSymbol(cds);
                     
-                    if (!emittedNamespace && symbol.ContainingNamespace.IsGlobalNamespace)
+                    if (!emittedNamespace && !semanticClass.ContainingNamespace.IsGlobalNamespace)
                     {
-                        classWriter.AppendLine($"namespace {symbol.ContainingNamespace.Name}");
+                        classWriter.AppendLine($"namespace {semanticClass.ContainingNamespace.Name}");
                         classWriter.AppendLine("{");
                         emittedNamespace = true;
                     }
 
                     // We're in a command, but this class in particular isn't a command group.
-                    if (!symbol.BaseType.Equals(symbol, SymbolEqualityComparer.Default))
+                    if (!semanticClass.BaseType.Equals(commandGroup, SymbolEqualityComparer.Default))
                         break;
 
                     classWriter.AppendLine($"class {cds.Identifier}");

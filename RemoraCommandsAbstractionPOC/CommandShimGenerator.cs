@@ -97,13 +97,20 @@ public class CommandShimGenerator : ISourceGenerator
 
                     RipAttributes(methodWriter, attributes);
                     ShimMethod(methodWriter, symbol);
+
+                    methodWriter.Flush();
                 }
-
-                classWriter.AppendLine('}');
+                
+                
+                if (emittedNamespace)
+                {
+                    classWriter.AppendLine("}");
+                }
+                
+                classWriter.Flush();
             }
-
-            context.AddSource($"{semanticModel.GetDeclaredSymbol(classDeclaration).Name}.Shim.cs", builder.ToString());
-
+            
+            context.AddSource($"{classDeclaration.Identifier}.Shim.cs", builder.ToString());
         }
     }
 
@@ -159,10 +166,11 @@ public class CommandShimGenerator : ISourceGenerator
 
             using var bodyWriter = methodWriter.CreateChildWriter();
 
-            bodyWriter.AppendLine($"await {symbol.Name}({string.Join(", ", symbol.Parameters.Select(p => p.Name))}");
+            bodyWriter.AppendLine($"await {symbol.Name}({string.Join(", ", symbol.Parameters.Select(p => p.Name))};");
             bodyWriter.AppendLine(");");
 
             bodyWriter.AppendLine("return Result.Success();");
+            bodyWriter.Flush();
 
             methodWriter.AppendLine('}');
         }
@@ -193,11 +201,12 @@ public class CommandShimGenerator : ISourceGenerator
                     }
                     else if (argument.Kind is TypedConstantKind.Array)
                     {
-                       stringifiedArguments.Add(string.Join(", ", argument.Values));
+                        if (argument.Values.Any())
+                            stringifiedArguments.Add(string.Join(", ", argument.Values));
                     }
                     else
                     {
-                        stringifiedArguments.Add(argument.Value.ToString());
+                        stringifiedArguments.Add(argument.Type.SpecialType is SpecialType.System_String ? $"\"{argument.Value}\"" : argument.Value.ToString());
                     }
                 }
 

@@ -16,9 +16,16 @@ public class CodeWriter : IDisposable
         _indent = parent._indent + 1;
     }
     
-    public CodeWriter Append(string text)
+    public CodeWriter Append(string text, bool indent = false)
     {
-        _stringBuilder.Append(text);
+        if (indent)
+        {
+            _stringBuilder.Append(GetIndent() + text);
+        }
+        else
+        {
+            _stringBuilder.Append(text);
+        }
         
         return this;
     }

@@ -61,8 +61,8 @@ public class CommandShimGenerator : ISourceGenerator
                     
                     if (!emittedNamespace && !semanticClass.ContainingNamespace.IsGlobalNamespace)
                     {
-                        classWriter.AppendLine($"namespace {semanticClass.ContainingNamespace.Name}");
-                        classWriter.AppendLine("{");
+                        builder.AppendLine($"namespace {semanticClass.ContainingNamespace.Name}");
+                        builder.AppendLine("{");
                         emittedNamespace = true;
                     }
 
@@ -100,14 +100,14 @@ public class CommandShimGenerator : ISourceGenerator
                     RipAttributes(methodWriter, attributes);
                     ShimMethod(methodWriter, symbol);
                 }
-                
-                if (emittedNamespace)
-                {
-                    classWriter.AppendLine("}");
-                }
-                
-                classWriter.Flush();
             }
+            
+            if (emittedNamespace)
+            {
+                classWriter.AppendLine("}");
+            }
+                
+            classWriter.Flush();
             
             context.AddSource($"{classDeclaration.Identifier}.Shim.cs", builder.ToString());
         }
@@ -115,7 +115,7 @@ public class CommandShimGenerator : ISourceGenerator
 
     private static void ShimMethod(CodeWriter methodWriter, IMethodSymbol symbol)
     {
-        methodWriter.Append("public async Task<Result> ");
+        methodWriter.Append("public async Task<Result> ", true);
         methodWriter.Append(symbol.Name + "_Shim");
 
         if (!symbol.Parameters.Any() || symbol.Parameters.All(p => !p.GetAttributes().Any()))
@@ -124,6 +124,7 @@ public class CommandShimGenerator : ISourceGenerator
         }
         else
         {
+            methodWriter.AppendLine("");
             methodWriter.AppendLine('(');
 
             using (var parameterWriter = methodWriter.CreateChildWriter())

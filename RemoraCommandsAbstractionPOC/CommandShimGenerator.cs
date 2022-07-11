@@ -1,5 +1,6 @@
 ﻿using System.CodeDom.Compiler;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -184,18 +185,15 @@ public class CommandShimGenerator : ISourceGenerator
                 foreach (var argument in attribute.ConstructorArguments)
                 {
                     // Check if the argument is an enum
-                    if (argument.Value is ITypeSymbol typeSymbol)
+                    if (argument.Kind is TypedConstantKind.Enum)
                     {
-                        if (typeSymbol.TypeKind == TypeKind.Enum)
-                        {
-                            var enumName = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                            var enumValue = argument.Value.ToString();
-                            stringifiedArguments.Add($"{enumName}.{enumValue}");
-                        }
-                        else
-                        {
-                            stringifiedArguments.Add(argument.Value.ToString());
-                        }
+                        var enumName = argument.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                        var enumValue = argument.Value.ToString();
+                        stringifiedArguments.Add($"{enumName}.{enumValue}");
+                    }
+                    else if (argument.Kind is TypedConstantKind.Array)
+                    {
+                       stringifiedArguments.Add(string.Join(", ", argument.Values));
                     }
                     else
                     {

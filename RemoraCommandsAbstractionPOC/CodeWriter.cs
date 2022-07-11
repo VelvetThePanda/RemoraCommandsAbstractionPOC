@@ -53,17 +53,17 @@ public class CodeWriter : IDisposable
 
     public CodeWriter Flush()
     {
-        _parent?.AppendLine(ToString());
+        _parent?.Append(ToString());
         _stringBuilder.Clear();
 
         return this;
     }
     
-    public CodeWriter CreateChildWriter() => new(this);
+    public CodeWriter Indent() => new(this);
 
     public override string ToString() => _stringBuilder.ToString();
 
-    private string GetIndent() => new('\t', _indent);
+    private string GetIndent() => new('\t', _indent );
 
     public void Dispose() => Flush();
 

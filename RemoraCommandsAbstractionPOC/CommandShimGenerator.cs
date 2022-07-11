@@ -45,7 +45,7 @@ public class CommandShimGenerator : ISourceGenerator
 
             var emittedNamespace = false;
 
-            using var classWriter = builder.CreateChildWriter();
+            using var classWriter = builder.Indent();
 
             foreach (var node in root.DescendantNodes())
             {
@@ -72,8 +72,6 @@ public class CommandShimGenerator : ISourceGenerator
 
                     classWriter.AppendLine($"partial class {cds.Identifier}");
                     classWriter.AppendLine("{");
-
-                    classWriter.Flush();
                 }
 
                 if (node is MethodDeclarationSyntax mds)
@@ -95,19 +93,21 @@ public class CommandShimGenerator : ISourceGenerator
                     if (!attributes.Any(a => a.AttributeClass.Equals(commandAttribute, SymbolEqualityComparer.Default)))
                         continue;
 
-                    using var methodWriter = classWriter.CreateChildWriter();
+                    using var methodWriter = classWriter.Indent();
 
                     RipAttributes(methodWriter, attributes);
                     ShimMethod(methodWriter, symbol);
                 }
             }
             
-            if (emittedNamespace)
-            {
-                classWriter.AppendLine("}");
-            }
+            classWriter.AppendLine("}");
                 
             classWriter.Flush();
+            
+            if (emittedNamespace)
+            {
+                builder.AppendLine("}");
+            }
             
             context.AddSource($"{classDeclaration.Identifier}.Shim.cs", builder.ToString());
         }
@@ -128,7 +128,7 @@ public class CommandShimGenerator : ISourceGenerator
             methodWriter.AppendLine("");
             methodWriter.AppendLine('(');
 
-            using (var parameterWriter = methodWriter.CreateChildWriter())
+            using (var parameterWriter = methodWriter.Indent())
             {
                 for (var i = 0; i < symbol.Parameters.Length; i++)
                 {
@@ -167,7 +167,7 @@ public class CommandShimGenerator : ISourceGenerator
         
         methodWriter.AppendLine('{');
 
-        using (var bodyWriter = methodWriter.CreateChildWriter())
+        using (var bodyWriter = methodWriter.Indent())
         {
             bodyWriter.Append($"await {symbol.Name}({string.Join(", ", symbol.Parameters.Select(p => p.Name))}", true);
             bodyWriter.Append(");");
@@ -177,8 +177,6 @@ public class CommandShimGenerator : ISourceGenerator
         }
 
         methodWriter.AppendLine('}');
-
-        methodWriter.Flush();
     }
 
     private static void RipAttributes(CodeWriter writer, ImmutableArray<AttributeData> attributes)
@@ -230,14 +228,11 @@ public class CommandShimGenerator : ISourceGenerator
                     }
                 }
 
-                writer.Append('(');
                 writer.Append($"({string.Join(", ", stringifiedArguments)})");
-                writer.Append(')');
             }
 
-            writer.AppendLine(']');
+            writer.Append(']');
+            writer.AppendLine("");
         }
-        
-        writer.Flush();
     }
 }

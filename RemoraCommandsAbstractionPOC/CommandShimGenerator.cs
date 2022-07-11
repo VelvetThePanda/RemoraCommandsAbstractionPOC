@@ -70,7 +70,7 @@ public class CommandShimGenerator : ISourceGenerator
                     if (!semanticClass.BaseType.Equals(commandGroup, SymbolEqualityComparer.Default))
                         break;
 
-                    classWriter.AppendLine($"class {cds.Identifier}");
+                    classWriter.AppendLine($"partial class {cds.Identifier}");
                     classWriter.AppendLine("{");
 
                     classWriter.Flush();

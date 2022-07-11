@@ -30,7 +30,7 @@ public class CommandShimGenerator : ISourceGenerator
                 continue; // No class to check.
             }
 
-            if (!semanticModel.GetDeclaredSymbol(classDeclaration).BaseType.Equals(commandGroup))
+            if (!semanticModel.GetDeclaredSymbol(classDeclaration).BaseType.Equals(commandGroup, SymbolEqualityComparer.Default))
             {
                 continue; // Not a command group.
             }
@@ -67,7 +67,7 @@ public class CommandShimGenerator : ISourceGenerator
                     }
 
                     // We're in a command, but this class in particular isn't a command group.
-                    if (!symbol.BaseType.Equals(symbol))
+                    if (!symbol.BaseType.Equals(symbol, SymbolEqualityComparer.Default))
                         break;
 
                     classWriter.AppendLine($"class {cds.Identifier}");
@@ -90,7 +90,7 @@ public class CommandShimGenerator : ISourceGenerator
 
                     var commandAttribute = context.Compilation.GetTypeByMetadataName("Remora.Commands.Attributes.CommandAttribute")!;
 
-                    if (!attributes.Any(a => a.AttributeClass.Equals(commandAttribute)))
+                    if (!attributes.Any(a => a.AttributeClass.Equals(commandAttribute, SymbolEqualityComparer.Default)))
                         continue;
 
                     using var methodWriter = classWriter.CreateChildWriter();
@@ -102,7 +102,7 @@ public class CommandShimGenerator : ISourceGenerator
                 classWriter.AppendLine('}');
             }
 
-            context.AddSource("RemoraCommandsAbstractionPOC.Generated", builder.ToString());
+            context.AddSource($"{semanticModel.GetDeclaredSymbol(classDeclaration).Name}.Shim.cs", builder.ToString());
 
         }
     }

@@ -209,7 +209,11 @@ public class CommandShimGenerator : ISourceGenerator
                     }
                     else
                     {
-                        stringifiedArguments.Add(argument.Type.SpecialType is SpecialType.System_String ? $"\"{argument.Value}\"" : argument.Value.ToString());
+                        var add = argument.Type.SpecialType is SpecialType.System_String or SpecialType.System_Char
+                            ? SymbolDisplay.FormatLiteral(argument.Value.ToString(), true) 
+                            : argument.Value.ToString();
+                        
+                        stringifiedArguments.Add(add);
                     }
                 }
 
